@@ -244,9 +244,9 @@ fun SimpleImage() {
         modifier = Modifier
             .wrapContentSize()
             .background(Color.Gray)
-            .padding(18.dp)//padding 在border之前 -》外边距
+//            .padding(18.dp)//padding 在border之前 -》外边距
             .border(3.dp, Color.Blue, CircleShape)
-//            .padding(18.dp) //padding 在border之后 -》内边距
+            .padding(18.dp) //padding 在border之后 -》内边距
             .clip(CircleShape)
     )
 }
