@@ -1,10 +1,12 @@
 package com.xyc.composetestdemo
 
 import android.R
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.text.Layout
 import android.transition.CircularPropagation
+import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -24,6 +26,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
@@ -44,9 +47,12 @@ import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,8 +71,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.xyc.composetestdemo.ui.theme.ComposeTestDemoTheme
+import com.xyc.composetestdemo.vm.MainVM
 import kotlin.math.roundToInt
 
 class MainActivity : ComponentActivity() {
@@ -84,14 +93,25 @@ class MainActivity : ComponentActivity() {
 //                    )
 //                    SimpleWidgetColumn(modifier = Modifier.padding(innerPadding)) //垂直布局
 //                    SimpleWidgetRow(modifier = Modifier.padding(innerPadding))//水平布局
+//                    Counter(modifier = Modifier.padding(innerPadding).fillMaxSize())
+                    CounterUpdate(
+                        modifier = Modifier
+                            .padding(innerPadding)
+                    )
+//                    CounterVM(
+//                        vm = viewModel(),
+//                        modifier = Modifier
+//                            .padding(innerPadding),
+//
+//                        )
                 }
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.surface
-                ) {
-                    SimpleImage()
-//                    HighLevelCompose()
-                }
+//                Surface(
+//                    modifier = Modifier.fillMaxSize(),
+//                    color = MaterialTheme.colorScheme.surface
+//                ) {
+//                    SimpleImage()
+////                    HighLevelCompose()
+//                }
             }
         }
     }
@@ -292,14 +312,93 @@ fun HighLevelCompose() {
 //    }
 }
 
+//讲解state用法
+// remember 和mutableIntStateOf组合可以更新结果值
+//rememberSaveable 和mutableIntStateOf组合不仅可更新结果值，当评估发生旋转时值不会重置为0
 @Composable
-fun TestCloumn() {
+fun Counter(modifier: Modifier) {
+//    var count by remember { mutableIntStateOf(0) }
+    var count by rememberSaveable { mutableIntStateOf(0) } //定义在方法中成为有状态的Composable函数
     Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "测速",
-            modifier = Modifier.align(Alignment.TopStart as Alignment.Horizontal)
+            text = "$count",
+            fontSize = 50.sp
         )
+        Button(
+            onClick = { count++ }
+        ) {
+            Text(
+                text = "Click me",
+                fontSize = 26.sp
+            )
+        }
+    }
+}
+
+/**
+ * 通过外部传参 达到无状态的Composable函数
+ */
+@Composable
+fun CounterUpdate(modifier: Modifier) {
+//    var count by rememberSaveable { mutableIntStateOf(0) }
+//    var countDouble by rememberSaveable { mutableIntStateOf(0) }
+    val vm: MainVM = viewModel()
+    var count = vm.count.observeAsState(0)
+    var countDouble = vm.doubleCount.observeAsState(0)
+    Column() {
+        Counter(
+            count = count.value,
+            onIncrement = { vm.incrementCount() },
+            modifier = modifier.fillMaxWidth()
+        )
+        Counter(
+            count = countDouble.value,
+            onIncrement = { vm.incrementDoubleCount() },
+            modifier = modifier.fillMaxWidth()
+        )
+    }
+}
+
+//@Composable
+//fun CounterVM(vm: MainVM, modifier: Modifier) {
+//    val count by  vm.count.observeAsState(0)
+//    val countDouble by vm.countDouble.observeAsState(0)
+//    Column {
+//        Counter(
+//            count,
+//            onIncrement = { vm.incrementCount() },
+//            modifier.fillMaxSize()
+//        )
+//        Counter(
+//            countDouble,
+//            onIncrement = { vm.incrementDoubleCount() },
+//            modifier.fillMaxSize()
+//        )
+//    }
+//}
+
+@Composable
+fun Counter(count: Int, onIncrement: () -> Unit, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Text(
+            text = "$count",
+            fontSize = 50.sp
+        )
+        Button(
+            onClick = { onIncrement() }
+        ) {
+            Text(
+                text = "Click me",
+                fontSize = 26.sp
+            )
+        }
     }
 }
 
